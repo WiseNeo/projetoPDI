@@ -9,17 +9,17 @@
 #xtranslate @{Default} => Otherwise
 
 
-WsRestful apiteste Description "WebService REST para testes"
+WsRestful apicvn Description "WebService REST para testes"
 
     WsMethod GET Description "Sincronização de dados via GET" WsSyntax "/GET/{method}"
 
 End WsRestful
 
-WsMethod GET WsService apiteste
+WsMethod GET WsService apicvn
 
 Local cJson      := ''
 Local nList      := 0
-Local nX         := 0
+Local nX,nY      := 0
 Local cCorte     := 10
 Local nInit      := 1
 Local nTerm      := cCorte
@@ -28,25 +28,31 @@ Local aAux       := {}
 Local aUsrPass   := {}
 Local aUser      := {}
 
+    RpcSetType(3)
+    RpcSetEnv('T1', 'D MG 01 ',,,'CTB')
+
+
     ::SetContentType('application/json')
 
         @{Route}
-            @{When '/produtos/{id}'}
+            @{When '/cabcvn/{id}'}
                 
-                aList  := fQryProd(.F.,'')
+                aList  := fQryCabCvn(.F.,'')
                 nDivid := Ceiling(Len(aList)/cCorte)
 
                 For nX := 1 To nDivid
                     cJson := '['
-
+                    //CVN_FILIAL,CVN_CODPLA,CVN_VERSAO,CVN_DTVIGI,CVN_DTVIGF,CVN_ENTREF,CVN_DSCPLA
                     For nList := nInit to Iif(nX=nDivid,Len(aList),nTerm)
                         cJson += '{'
-                        cJson += '	"codigo":"'+aList[nList,1]+'",'
-                        cJson += '	"descricao":"'+aList[nList,2]+'",'
-                        cJson += '	"tipo":"'+aList[nList,3]+'",'
-                        cJson += '	"unidmed":"'+aList[nList,4]+'",'
-                        cJson += '	"armazem":"'+aList[nList,5]+'",'
-                        cJson += '	"grupo":"'+aList[nList,6]+'"'
+                        cJson += '	"filial":"'+aList[nList,1]+'",'
+                        cJson += '	"codigo":"'+aList[nList,2]+'",'
+                        cJson += '	"versao":"'+aList[nList,3]+'",'
+                        cJson += '	"dtvigini":"'+aList[nList,4]+'",'
+                        cJson += '	"dtvigfim":"'+aList[nList,5]+'",'
+                        cJson += '	"entref":"'+aList[nList,6]+'",'
+                        cJson += '	"descricao":"'+aList[nList,7]+'",'
+                        cJson += '  "items": ['+ aList[nList,8]+']
                         cJson += '},'
                     Next nList
 
@@ -58,24 +64,26 @@ Local aUser      := {}
                     Aadd(aAux,cJson)
                 Next nX
 
-                If Val(@{Param 2}) <= Len(aAux)
-                    ::SetResponse(aAux[Val(@{Param 2})])
+                If Val(::aURLParms[2]) <= Len(aAux)
+                    ::SetResponse(aAux[Val(::aURLParms[2])])
                 Else
                     SetRestFault(400,'Ops')
                 EndIf
 
-            @{When '/searchprod/{id}'}
-                aList := fQryProd(.T.,Alltrim(Upper(@{Param 2})))
+            @{When '/searchcabcvn/{id}'}
+                aList := fQryCabCvn(.T.,Alltrim(Upper(::aURLParms[2])))
                 cJson := '['
                 
                 For nList := 1 to Len(aList)
                     cJson += '{'
-                    cJson += '	"codigo":"'+aList[nList,1]+'",'
-                    cJson += '	"descricao":"'+aList[nList,2]+'",'
-                    cJson += '	"tipo":"'+aList[nList,3]+'",'
-                    cJson += '	"unidmed":"'+aList[nList,4]+'",'
-                    cJson += '	"armazem":"'+aList[nList,5]+'",'
-                    cJson += '	"grupo":"'+aList[nList,6]+'"'
+                    cJson += '	"filial":"'+aList[nList,1]+'",'
+                    cJson += '	"codigo":"'+aList[nList,2]+'",'
+                    cJson += '	"versao":"'+aList[nList,3]+'",'
+                    cJson += '	"dtvigini":"'+aList[nList,4]+'",'
+                    cJson += '	"dtvigfim":"'+aList[nList,5]+'",'
+                    cJson += '	"entref":"'+aList[nList,6]+'",'
+                    cJson += '	"descricao":"'+aList[nList,7]+'",'
+                    cJson += '  "items": ['+ aList[nList,8]+']
                     cJson += '},'
                 Next nList
 
@@ -87,100 +95,7 @@ Local aUser      := {}
                 Else
                     ::SetResponse('[]')
                 EndIf
-
-            @{When '/users/{id}'}
-                aUsrPass := StrTokArr(Lower(cValToChar(@{Param 2})),"|&|")
-
-                If Len(aUsrPass) > 0
-                    PswOrder(2)
-                    If PswSeek(aUsrPass[1],.T.)
-                        aUser := PswRet()[1]
-
-                        If PswName(aUsrPass[2])
-                            cJson := '['
-                            cJson += '{'
-                            cJson += '"user": '+'"'+aUsrPass[1]+'",'
-                            cJson += '"pass": '+'"'+aUsrPass[2]+'",'
-                            cJson += '"name": '+'"'+Capital(aUser[4])+'",'
-                            cJson += '"mail": '+'"'+aUser[14]+'" '
-                            cJson += '}'
-                            cJson += ']'
-
-                            ::SetResponse(cJson)
-                        Else
-                            SetRestFault(400,'Senha Invalida')
-                            Return .F.
-                        EndIf
-                    Else
-                        SetRestFault(400,'Usuario Invalido')
-                        Return .F.
-                    EndIf
-                Else
-                    SetRestFault(400,'Usuario Invalido')
-                    Return .F.
-                EndIf
                 
-            @{When '/lojas/{id}'}
-                
-                aList  := fQryloja(.F.,'')
-                nDivid := Ceiling(Len(aList)/cCorte)
-
-                For nX := 1 To nDivid
-                    cJson := '['
-
-                    For nList := nInit to Iif(nX=nDivid,Len(aList),nTerm)
-                        cJson += '{'
-                        cJson += '	"id":"'+aList[nList,1]+'",'
-                        cJson += '	"filial":"'+aList[nList,2]+'",'
-                        cJson += '	"armazem":"'+aList[nList,3]+'",'
-                        cJson += '	"descricao":"'+aList[nList,4]+'",'
-                        cJson += '	"tipolj":"'+aList[nList,5]+'",'
-                        cJson += '	"invent":"'+aList[nList,6]+'",'
-                        cJson += '	"bloqueado":"'+aList[nList,7]+'"'
-                        cJson += '},'
-                    Next nList            
-
-                    nInit := nInit+cCorte
-                    nTerm := nTerm+cCorte
-                    cJson := Left(cJson, RAT(",", cJson) - 1)
-                    cJson += ']'
-
-                    Aadd(aAux,cJson)
-                Next nX
-
-                If Val(@{Param 2}) <= Len(aAux)
-                    ::SetResponse(aAux[Val(@{Param 2})])
-                Else
-                    SetRestFault(400,'Ops')
-                EndIf
-                
-
-            @{When '/searchloja/{id}'}
-
-                aList := fQryloja(.T.,Alltrim(Upper(@{Param 2})))
-                cJson := '['
-                
-                For nList := 1 to Len(aList)
-                    cJson += '{'
-                    cJson += '	"id":"'+aList[nList,1]+'",'
-                    cJson += '	"filial":"'+aList[nList,2]+'",'
-                    cJson += '	"armazem":"'+aList[nList,3]+'",'
-                    cJson += '	"descricao":"'+aList[nList,4]+'",'
-                    cJson += '	"tipolj":"'+aList[nList,5]+'",'
-                    cJson += '	"invent":"'+aList[nList,6]+'",'
-                    cJson += '	"bloqueado":"'+aList[nList,7]+'"'
-                    cJson += '},'
-                Next nList
-
-                cJson := Left(cJson, RAT(",", cJson) - 1)
-                cJson += ']'
-                
-                If Len(aList)>0
-                    ::SetResponse(cJson)
-                Else
-                    ::SetResponse('[]')
-                EndIf
-
             @{Default}
                 SetRestFault(400,"Ops")
                 Return .F.    
@@ -189,60 +104,61 @@ Local aUser      := {}
 Return .T.
 
 
-Static Function fQryProd(lSearch,cSearch)
+Static Function fQryCabCvn(lSearch,cSearch)
 
 Local cAliasSQL  := GetNextAlias()
 Local cQuery     := ''
 Local aRet       := {}
+Local cJson      := ''
+Local nX         := 1
 
-    cQuery := " SELECT * FROM "+RetSqlName('SB1')+" "
-	cQuery += " WHERE D_E_L_E_T_!='*' AND B1_MSBLQL!='1' "
-    cQuery += Iif(lSearch," AND B1_DESC LIKE '%"+cSearch+"%' ", " ")
+    cQuery := " SELECT CVN_FILIAL,CVN_CODPLA,CVN_DSCPLA,CVN_DTVIGI,CVN_DTVIGF,CVN_ENTREF,CVN_VERSAO
+    cQuery += " FROM "+RetSqlName('CVN')+" "
+    cQuery += " WHERE D_E_L_E_T_=''
+    //cQuery += " AND CVN_DTVIGF >= '"+dtos(date())+"'
+    cQuery += Iif(lSearch," AND CVN_FILIAL = '"+cSearch+"'", " ")
+    cQuery += " GROUP BY CVN_FILIAL,CVN_CODPLA,CVN_DSCPLA,CVN_DTVIGI,CVN_DTVIGF,CVN_ENTREF,CVN_VERSAO  
+    //filtrar somentes os corretos
+    cQuery += " ORDER BY 1"
+    
 
     MPSysOpenQuery(cQuery,cAliasSQL)
 
     While (cAliasSQL)->(!EoF())
         Aadd(aRet,{;
-            RemoveEspec((cAliasSQL)->B1_COD)   ,;
-            RemoveEspec((cAliasSQL)->B1_DESC)  ,;
-            RemoveEspec((cAliasSQL)->B1_TIPO)  ,;
-            RemoveEspec((cAliasSQL)->B1_UM)    ,;
-            RemoveEspec((cAliasSQL)->B1_LOCPAD),;
-            RemoveEspec((cAliasSQL)->B1_GRUPO) })
+            RemoveEspec((cAliasSQL)->CVN_FILIAL),;
+            RemoveEspec((cAliasSQL)->CVN_CODPLA),;
+            RemoveEspec((cAliasSQL)->CVN_VERSAO),;
+            RemoveEspec((cAliasSQL)->CVN_DTVIGI),;
+            RemoveEspec((cAliasSQL)->CVN_DTVIGF),;
+            RemoveEspec((cAliasSQL)->CVN_ENTREF),;
+            RemoveEspec((cAliasSQL)->CVN_DSCPLA) })
 
+            dbSelectArea('CVN')            
+            CVN->(DbSetOrder(5))//CVN_FILIAL+CVN_CODPLA+CVN_VERSAO+CVN_LINHA    
+            CVN->(DbGoTop())
+            CVN->(MsSeek((cAliasSQL)->CVN_FILIAL+(cAliasSQL)->CVN_CODPLA+(cAliasSQL)->CVN_VERSAO))
+            
+            While CVN->(!EOF()) .and. (cAliasSQL)->CVN_FILIAL+(cAliasSQL)->CVN_CODPLA+(cAliasSQL)->CVN_VERSAO == CVN->CVN_FILIAL+CVN->CVN_CODPLA+CVN->CVN_VERSAO //.and. CVN->CVN_CLASSE =='2'
+                    
+                    //CVN_TPUTIL CVN_CTAREL	CVN_STAPLA                    
+                    cJson := '{'
+                    cJson += '	"id":"'+cValToChar(CVN->(RECNO()))+'",'
+                    cJson += '	"contaRef":"' +CVN->CVN_CTAREF+'",'
+                    cJson += '	"descricao":"'+CVN->CVN_DSCCTA+'",'
+                    cJson += '	"classe":"'   +CVN->CVN_CLASSE+'",'
+                    cJson += '	"natcta":"'   +CVN->CVN_NATCTA+'",'
+                    cJson += '	"ctasup":"'   +CVN->CVN_CTASUP+'",'
+                    cJson += '	"linha":"'    +CVN->CVN_LINHA +'"'
+                    cJson += '},
+
+                    
+                  CVN->(DBSKIP())  
+            endDo
+        aadd(aRet[nX],cJson)    
+        cJson      := ''
         (cAliasSQL)->(DbSkip())
-    EndDo
-
-Return aRet
-
-
-Static Function fQryloja(lSearch,cSearch)
-
-Local cAliasSQL  := GetNextAlias()
-Local cQuery     := ''
-Local aRet       := {}
-Local nId        := 0
-
-    cQuery := " SELECT * FROM "+RetSqlName('NNR')+" "
-	cQuery += " WHERE D_E_L_E_T_!='*' "
-    cQuery += "     AND RTRIM(LTRIM(SUBSTRING(NNR_DESCRI,1,2))) = 'LJ' "
-    cQuery += Iif(lSearch," AND NNR_DESCRI LIKE '%"+cSearch+"%' ", " ")
-    cQuery += " ORDER BY NNR_FILIAL,NNR_CODIGO "
-
-    MPSysOpenQuery(cQuery,cAliasSQL)
-
-    While (cAliasSQL)->(!EoF())
-        nId++
-        Aadd(aRet,{;
-            cValToChar(nId) ,;
-            RemoveEspec((cAliasSQL)->NNR_FILIAL) ,;
-            RemoveEspec((cAliasSQL)->NNR_CODIGO) ,;
-            RemoveEspec((cAliasSQL)->NNR_DESCRI) ,;
-            Iif(Empty((cAliasSQL)->NNR_XTPLJ),'S',(cAliasSQL)->NNR_XTPLJ),;
-            Iif(Empty((cAliasSQL)->NNR_XINV),'N',(cAliasSQL)->NNR_XINV),;
-            Iif(Empty((cAliasSQL)->NNR_MSBLQL),'2',(cAliasSQL)->NNR_MSBLQL)})
-
-        (cAliasSQL)->(DbSkip())
+        nX++
     EndDo
 
 Return aRet
