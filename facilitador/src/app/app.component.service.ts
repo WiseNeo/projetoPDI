@@ -10,7 +10,6 @@ export class AppComponentService  {
       { property: 'id', type: 'number', width: '8%' },
       { property: 'product' },
       { property: 'customer' },
-      { property: 'exit_forecast', label: 'Exit forecast', type: 'dateTime' },
       { property: 'time_since_purchase', label: 'Time since purchase', type: 'time', visible: false },
       { property: 'quantity', label: 'Quantity (Tons)', type: 'number', width: '15%', visible: false },
       { property: 'icms', label: 'ICMS', type: 'number', format: '1.2-5', visible: false },
@@ -38,7 +37,7 @@ export class AppComponentService  {
   getColumns2(): Array<PoTableColumn> {
     return [
       { property: 'conta',label: 'Conta', width: '100px' },
-      { property: 'descri',label: 'Descrição', width: '200px' },
+      { property: 'descri',label: 'Descrição', width: '200px' }
     ];
   }
 
@@ -48,7 +47,6 @@ export class AppComponentService  {
         id: 1200,
         product: 'Rice',
         customer: 'Angeloni',
-        exit_forecast: this.generateRandomDate(),
         status: 'pendente',
         subItm:[]
       },
@@ -56,7 +54,6 @@ export class AppComponentService  {
         id: 1355,
         product: 'Margarine',
         customer: 'Giassi',
-        exit_forecast: this.generateRandomDate(),
         status: 'transport',
         subItm:[]
       },
@@ -65,7 +62,6 @@ export class AppComponentService  {
         id: 1712,
         product: 'Milk',
         customer: 'Carrefour',
-        exit_forecast: this.generateRandomDate(),
         status: 'production',
         subItm:[]
       }
@@ -98,13 +94,5 @@ export class AppComponentService  {
     ];
   }
 
-
-  private generateRandomDate() {
-    const hour = Math.floor(Math.random() * 20);
-    const minutes = Math.floor(Math.random() * 59);
-    const seconds = Math.floor(Math.random() * 59);
-
-    return new Date(2018, 10, 23, hour, minutes, seconds);
-  }
 
 }

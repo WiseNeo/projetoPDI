@@ -76,8 +76,10 @@
           <po-container [p-height]="658">
             <h2 class="mb-15">CT1 - Plano de Contas</h2>
             
-            <po-input class="po-md-6" name="searchct1" p-placeholder="Pesquisar..." p-clean > </po-input>
-            <po-button p-icon="po-icon po-icon-search po-field-icon"></po-button>
+            <div class="po-row">
+              <po-input class="po-md-6" name="searchct1" p-placeholder="Pesquisar..." p-clean > </po-input>
+              <po-button class="btnSearch" p-icon="po-icon po-icon-search po-field-icon" (p-click)="teste()"></po-button>
+            </div>
 
             <po-table
               p-container="true"
@@ -88,7 +90,10 @@
               [p-columns]="columns1"
               [p-items]="items1"
               [p-hide-select-all]="true"
-            ></po-table>
+            >
+          </po-table>
+
+          <po-loading-overlay [hidden]="isHideLoading" p-text="Carregando Plano de Contas"></po-loading-overlay>
           </po-container>
           <po-button class="buttomExit" p-label="Atribuir" (p-click)="check()"> </po-button>
         </div>

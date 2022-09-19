@@ -2,6 +2,7 @@ import { Component, ViewChild, OnInit } from '@angular/core';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { PoMenuItem, PoModalComponent, PoNotificationService, PoTableColumn, PoTableComponent } from '@po-ui/ng-components';
 import { AppComponentService } from './app.component.service';
+import { HttpClient, HttpHeaders } from '@angular/common/http'
 
 @Component({
   selector: 'app-root',
@@ -16,6 +17,7 @@ export class AppComponent implements OnInit {
   menuItemSelected: string | any;
   idSelected: number = 0
   subItmSelected: any = []
+  isHideLoading = false;
 
   menus: Array<PoMenuItem> = [
     { 
@@ -36,6 +38,8 @@ export class AppComponent implements OnInit {
     this.innerWidth = window.innerWidth;
     this.columns = this.servicemenu.getColumns();
     this.items = this.servicemenu.getItems();
+
+    this.teste()
     
   }
 
@@ -112,9 +116,10 @@ export class AppComponent implements OnInit {
   items1: Array<any> = this.servicemenu.getItems1();
 
   constructor(
+    public http: HttpClient,
     public poNotification: PoNotificationService,
     public servicemenu: AppComponentService, 
-    private fb: UntypedFormBuilder
+    private fb: UntypedFormBuilder,
     ) {
     this.createReactiveForm();
   }
@@ -187,7 +192,15 @@ export class AppComponent implements OnInit {
   }
 
   teste(){
-    alert('Hello world!!!')
+    let url = 'http://localhost:8400/rest/apict1/planodecontas/1'
+
+    this.http.get(url).subscribe((response:any) =>{
+      response.forEach((element: any) => {
+        console.log(element)
+      });
+
+      //this.isHideLoading = true
+    })
   }
 
 
