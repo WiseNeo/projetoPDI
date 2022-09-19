@@ -25,13 +25,9 @@ Local nInit      := 1
 Local nTerm      := cCorte
 Local aList      := {}
 Local aAux       := {}
-Local aUsrPass   := {}
-Local aUser      := {}
-
 
     RpcSetType(3)
     RpcSetEnv('T1', 'D MG 01 ',,,'CTB')
-
 
     ::SetContentType('application/json')
 
@@ -53,8 +49,7 @@ Local aUser      := {}
                         cJson += '	"classe":"'+aList[nList,4]+'",'
                         cJson += '	"normal":"'+aList[nList,5]+'",'
                         cJson += '	"ntsped":"'+aList[nList,6]+'",'
-                        cJson += '	"dtexist":"'+aList[nList,7]+'",'
-                        cJson += '  "items": ["'+ aList[nList,9]+'"]"
+                        cJson += '	"dtexist":"'+aList[nList,7]+'"'
                         cJson += '},'
                     Next nList
 
@@ -110,21 +105,20 @@ Return .T.
 Static Function fQryCt1(lSearch,cSearch)
 
 Local cAliasSQL  := GetNextAlias()
-Local cAliasSQL2 := GetNextAlias()
+Local cAliasSQL2 := ''
 Local cQuery     := ''
-Local aRet       := {}
 Local cJson      := ''
+Local aRet       := {}
 Local nX         := 1
 
-    cQuery := " SELECT * FROM "+RetSqlName('CT1')+" "
-	cQuery += " WHERE D_E_L_E_T_ = ' ' " //AND B1_MSBLQL != '1' "
+    cQuery := " SELECT CT1_FILIAL,CT1_CONTA,CT1_DESC01,CT1_CLASSE,CT1_NORMAL,CT1_NTSPED,CT1_DTEXIS,R_E_C_N_O_ FROM "+RetSqlName('CT1')+" CT1 "
+	cQuery += " WHERE CT1.D_E_L_E_T_ = ' ' "
     cQuery += Iif(lSearch," AND CT1_CONTA = '"+cSearch+"' ", " ")
-    
 
     MPSysOpenQuery(cQuery,cAliasSQL)
 
     While (cAliasSQL)->(!EoF())
-        
+    
         Aadd(aRet,{;
             RemoveEspec((cAliasSQL)->CT1_FILIAL) ,;
             RemoveEspec((cAliasSQL)->CT1_CONTA)  ,;
@@ -133,7 +127,10 @@ Local nX         := 1
             RemoveEspec((cAliasSQL)->CT1_NORMAL) ,;
             RemoveEspec((cAliasSQL)->CT1_NTSPED) ,;
             RemoveEspec((cAliasSQL)->CT1_DTEXIS) ,;
-              cvaltochar((cAliasSQL)->R_E_C_N_O_)  })
+            cvaltochar((cAliasSQL)->R_E_C_N_O_)  })
+
+        If lSearch .And. !Empty(cSearch)
+            cAliasSQL2 := GetNextAlias()
 
            //popular um array na CT1, verificando se já tem vinculo na CVD - se já existe na CVD 
            cQuery :=" SELECT CT1_FILIAL FILIAL, CVD_CODPLA CODPLA,CVD_VERSAO VERSAO, CT1_CONTA CONTA, CVD_CTAREF CONTAREF"
@@ -141,9 +138,7 @@ Local nX         := 1
            cQuery +=" INNER JOIN "+RetSqlName('CVD')+" CVD ON CVD_FILIAL = CT1_FILIAL "
            cQuery +=" AND CT1_CONTA = CVD_CONTA "
            cQuery +=" AND CT1_CLASSE ='2' "
-           if lSearch
-            cQuery +=" AND CT1_CONTA = '"+cSearch+"' "
-           EndIf
+           cQuery +=" AND CT1_CONTA = '"+cSearch+"' "
            cQuery +=" AND CT1.D_E_L_E_T_ = '' "
            cQuery +=" AND CVD.D_E_L_E_T_ = '' "
            cQuery +=" GROUP BY CT1_FILIAL, CVD_CODPLA,CVD_VERSAO, CT1_CONTA, CVD_CTAREF "
@@ -154,29 +149,31 @@ Local nX         := 1
            dbSelectArea((cAliasSQL2))            
            (cAliasSQL2)->(DbGotop())
            
-           if (cAliasSQL2)->(!EOF()) 
+           If (cAliasSQL2)->(!EOF()) 
                 While (cAliasSQL2)->(!EOF()) 
-                //cJson := '['        
-                     //CT1_FILIAL, CVD_CODPLA,CVD_VERSAO, CT1_CONTA, CVD_CTAREF 
-                     cJson += '{'
-                     cJson += '	"filial":"'+FILIAL+'",'
-                     cJson += '	"codpla":"'+CODPLA+'",'
-                     cJson += '	"versao":"'+VERSAO+'",'
-                     cJson += '	"conta" :"'+CONTA+'",'
-                     cJson += '	"contaRef":"'+CONTAREF+'"
-                     cJson += '},
-                 //cJson += ']'    
-                     (cAliasSQL2)->(DBSKIP())
-                endDo
-           endIf
+                    //CT1_FILIAL, CVD_CODPLA,CVD_VERSAO, CT1_CONTA, CVD_CTAREF 
+                    cJson += '{'
+                    cJson += '	"filial":"'+RemoveEspec(FILIAL)+'",'
+                    cJson += '	"codpla":"'+RemoveEspec(CODPLA)+'",'
+                    cJson += '	"versao":"'+RemoveEspec(VERSAO)+'",'
+                    cJson += '	"conta" :"'+RemoveEspec(CONTA)+'",'
+                    cJson += '	"contaRef":"'+RemoveEspec(CONTAREF)+'"
+                    cJson += '},
+                    (cAliasSQL2)->(DBSKIP())
+                EndDo
+           EndIf
            (cAliasSQL2)->(DBCloseArea())
         aadd(aRet[nX],cJson)
         cJson :=''
+
+        EndIf
         (cAliasSQL)->(DbSkip())
         nX++
     EndDo
 
 Return aRet
+
+
 
 Static Function RemoveEspec(cWord)
     cWord := OemToAnsi(AllTrim(cWord))

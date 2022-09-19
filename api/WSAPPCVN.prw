@@ -19,14 +19,12 @@ WsMethod GET WsService apicvn
 
 Local cJson      := ''
 Local nList      := 0
-Local nX,nY      := 0
+Local nX         := 0
 Local cCorte     := 10
 Local nInit      := 1
 Local nTerm      := cCorte
 Local aList      := {}
 Local aAux       := {}
-Local aUsrPass   := {}
-Local aUser      := {}
 
     RpcSetType(3)
     RpcSetEnv('T1', 'D MG 01 ',,,'CTB')
@@ -143,18 +141,19 @@ Local nX         := 1
                     
                     //CVN_TPUTIL CVN_CTAREL	CVN_STAPLA                    
                     cJson := '{'
-                    cJson += '	"id":"'+cValToChar(CVN->(RECNO()))+'",'
-                    cJson += '	"contaRef":"' +CVN->CVN_CTAREF+'",'
-                    cJson += '	"descricao":"'+CVN->CVN_DSCCTA+'",'
-                    cJson += '	"classe":"'   +CVN->CVN_CLASSE+'",'
-                    cJson += '	"natcta":"'   +CVN->CVN_NATCTA+'",'
-                    cJson += '	"ctasup":"'   +CVN->CVN_CTASUP+'",'
-                    cJson += '	"linha":"'    +CVN->CVN_LINHA +'"'
+                    cJson += '	"id":"'       +cValToChar(CVN->(RECNO()))+'",'
+                    cJson += '	"contaRef":"' +RemoveEspec(CVN->CVN_CTAREF)+'",'
+                    cJson += '	"descricao":"'+RemoveEspec(CVN->CVN_DSCCTA)+'",'
+                    cJson += '	"classe":"'   +RemoveEspec(CVN->CVN_CLASSE)+'",'
+                    cJson += '	"natcta":"'   +RemoveEspec(CVN->CVN_NATCTA)+'",'
+                    cJson += '	"ctasup":"'   +RemoveEspec(CVN->CVN_CTASUP)+'",'
+                    cJson += '	"linha":"'    +RemoveEspec(CVN->CVN_LINHA) +'"'
                     cJson += '},
 
                     
                   CVN->(DBSKIP())  
             endDo
+        cJson := Left(cJson, RAT(",", cJson) - 1)
         aadd(aRet[nX],cJson)    
         cJson      := ''
         (cAliasSQL)->(DbSkip())
