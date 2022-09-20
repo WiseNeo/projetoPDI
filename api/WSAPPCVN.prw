@@ -105,6 +105,7 @@ Return .T.
 Static Function fQryCabCvn(lSearch,cSearch)
 
 Local cAliasSQL  := GetNextAlias()
+Local cAliasSQL2 := ''
 Local cQuery     := ''
 Local aRet       := {}
 Local cJson      := ''
@@ -114,7 +115,8 @@ Local nX         := 1
     cQuery += " FROM "+RetSqlName('CVN')+" "
     cQuery += " WHERE D_E_L_E_T_=''
     //cQuery += " AND CVN_DTVIGF >= '"+dtos(date())+"'
-    cQuery += Iif(lSearch," AND CVN_FILIAL = '"+cSearch+"'", " ")
+    cQuery += " AND CVN_FILIAL = '"+xFilial('CVN')+"'"
+    cQuery += " AND CVN_CODPLA+UPPER(CVN_DSCPLA) like '%"+Upper(cSearch)+"%'  "
     cQuery += " GROUP BY CVN_FILIAL,CVN_CODPLA,CVN_DSCPLA,CVN_DTVIGI,CVN_DTVIGF,CVN_ENTREF,CVN_VERSAO  
     //filtrar somentes os corretos
     cQuery += " ORDER BY 1"
@@ -132,30 +134,46 @@ Local nX         := 1
             RemoveEspec((cAliasSQL)->CVN_ENTREF),;
             RemoveEspec((cAliasSQL)->CVN_DSCPLA) })
 
-            dbSelectArea('CVN')            
-            CVN->(DbSetOrder(5))//CVN_FILIAL+CVN_CODPLA+CVN_VERSAO+CVN_LINHA    
-            CVN->(DbGoTop())
-            CVN->(MsSeek((cAliasSQL)->CVN_FILIAL+(cAliasSQL)->CVN_CODPLA+(cAliasSQL)->CVN_VERSAO))
-            
-            While CVN->(!EOF()) .and. (cAliasSQL)->CVN_FILIAL+(cAliasSQL)->CVN_CODPLA+(cAliasSQL)->CVN_VERSAO == CVN->CVN_FILIAL+CVN->CVN_CODPLA+CVN->CVN_VERSAO //.and. CVN->CVN_CLASSE =='2'
-                    
+            If lSearch .And. !Empty(cSearch)
+                cAliasSQL2 := GetNextAlias()
+
+                cQuery := " SELECT CVN.* "
+                cQuery += " FROM "+RetSqlName('CVN')+" CVN "
+                cQuery += " WHERE D_E_L_E_T_=' '
+                cQuery += " AND CVN_FILIAL = '"+(cAliasSQL)->CVN_FILIAL+"'"
+                cQuery += " AND CVN_CODPLA = '"+(cAliasSQL)->CVN_CODPLA+"'"
+                cQuery += " AND CVN_VERSAO = '"+(cAliasSQL)->CVN_VERSAO+"'"
+                cQuery += " AND CVN_ENTREF = '"+(cAliasSQL)->CVN_ENTREF+"'"
+
+                MPSysOpenQuery(cQuery,cAliasSQL2)
+
+                dbSelectArea((cAliasSQL2))            
+                (cAliasSQL2)->(DbGotop())
+           
+                if (cAliasSQL2)->(!EOF()) 
+                    While (cAliasSQL2)->(!EOF()) 
+
                     //CVN_TPUTIL CVN_CTAREL	CVN_STAPLA                    
-                    cJson := '{'
-                    cJson += '	"id":"'       +cValToChar(CVN->(RECNO()))+'",'
-                    cJson += '	"contaRef":"' +RemoveEspec(CVN->CVN_CTAREF)+'",'
-                    cJson += '	"descricao":"'+RemoveEspec(CVN->CVN_DSCCTA)+'",'
-                    cJson += '	"classe":"'   +RemoveEspec(CVN->CVN_CLASSE)+'",'
-                    cJson += '	"natcta":"'   +RemoveEspec(CVN->CVN_NATCTA)+'",'
-                    cJson += '	"ctasup":"'   +RemoveEspec(CVN->CVN_CTASUP)+'",'
-                    cJson += '	"linha":"'    +RemoveEspec(CVN->CVN_LINHA) +'"'
+                    cJson += '{'
+                    cJson += '	"id":"'       + cValToChar((cAliasSQL2)->R_E_C_N_O_)+'",'
+                    cJson += '	"contaRef":"' +RemoveEspec((cAliasSQL2)->CVN_CTAREF)+'",'
+                    cJson += '	"descricao":"'+RemoveEspec((cAliasSQL2)->CVN_DSCCTA)+'",'
+                    cJson += '	"classe":"'   +RemoveEspec((cAliasSQL2)->CVN_CLASSE)+'",'
+                    cJson += '	"natcta":"'   +RemoveEspec((cAliasSQL2)->CVN_NATCTA)+'",'
+                    cJson += '	"ctasup":"'   +RemoveEspec((cAliasSQL2)->CVN_CTASUP)+'",'
+                    cJson += '	"linha":"'    +RemoveEspec((cAliasSQL2)->CVN_LINHA) +'"'
                     cJson += '},
 
-                    
-                  CVN->(DBSKIP())  
-            endDo
-        cJson := Left(cJson, RAT(",", cJson) - 1)
-        aadd(aRet[nX],cJson)    
-        cJson      := ''
+
+                    (cAliasSQL2)->(DBSKIP())  
+                    endDo
+
+                EndIf 
+                (cAliasSQL2)->(DBCloseArea()) 
+                cJson := Left(cJson, RAT(",", cJson) - 1)
+                aadd(aRet[nX],cJson)    
+                cJson      := ''
+            Endif     
         (cAliasSQL)->(DbSkip())
         nX++
     EndDo
