@@ -1,103 +1,127 @@
 <div class="po-wrapper">
   <po-menu 
-    p-logo="../assets/logo.png" 
-    p-short-logo="../assets/shortlogo.png" 
-    [p-collapsed]="true" 
-    [p-menus]="menus" 
+  p-logo="../assets/logo.png" 
+  p-short-logo="../assets/shortlogo.png" 
+  [p-collapsed]="true" 
+  [p-menus]="menus" 
   ></po-menu>
   <po-page-default>
      <div class="po-row mt-15">
         <po-container class="po-xl-8 po-lg-8 po-md-8 po-sm-8" [p-height]="710">
            <h2 class="mb-15">CVN - Plano de Contas Referencial</h2>
+           <div class="po-row">
+              <po-input class="po-md-3" (p-change-model)="changePesqCT1($event)" name="InputSearchCT1" p-placeholder="Pesquisar..." p-clean > </po-input>
+              <po-button class="btnSearch" p-icon="po-icon po-icon-search po-field-icon" (p-click)="searchCT1()"> ></po-button>
+           </div>
            <div class="po-row" >
               <po-table
-                [p-auto-collapse]="true"
-                [p-columns]="columns"
-                [p-hide-columns-manager]="true"
-                [p-items]="items"
-                [p-sort]="true"
-                [p-striped]="true"
-                [p-hide-select-all]="true"
-                [p-selectable]="true"
-                [p-single-select]="true"
-                (p-selected)="selectedItem($event)"
-                (p-unselected)="unselectedItem()"
-                [p-selectable-entire-line]="true"
-                (p-expanded)="showItem($event)"
-
+              [p-auto-collapse]="true"
+              [p-columns]="columnCVN"
+              [p-hide-columns-manager]="true"
+              [p-items]="items"
+              [p-sort]="true"
+              [p-striped]="true"
+              (p-expanded)="showItem($event)"
               >
               <ng-template
-                p-table-row-template
-                let-rowItem
-                let-i="rowIndex"
-                [p-table-row-template-show]="isUndelivered"
-              >
-              <!--<po-widget>
-                <div class="po-row">
-                  <po-table
-                    [p-auto-collapse]="true"
-                    [p-columns]="columns2"
-                    [p-hide-columns-manager]="true"
-                    [p-items]="rowItem.subItm"
-                    [p-sort]="true"
-                    [p-striped]="true"
-                    (p-expanded)="showSubItem($event)"
-                  >
-                    <ng-template
-                      p-table-row-template
-                      let-rowItem
-                      let-i="rowIndex"
-                    >
-                        <div class="po-row">
-                          <form [formGroup]="reactiveForm">
-                            <po-input class="po-md-4" formControlName="campo1" p-clean  p-label="Campo 1"> </po-input>
-                            <po-input class="po-lg-4" formControlName="campo2" p-clean p-label="Campo 2"> </po-input>
-                          </form>
-                        </div>
-                        <po-button 
-                          class="confirmBtn" 
-                          p-label="Confirmar" 
-                          [p-disabled]="!reactiveForm.valid" 
-                          (p-click)="saveForm()"> 
-                        </po-button>
-                    </ng-template>
-                  </po-table> 
-          
-                </div>
-              </po-widget>-->
-
-              <po-grid [p-data]="rowItem.subItm" [p-columns]="columns2"> </po-grid>
+                 p-table-row-template
+                 let-rowItem
+                 let-i="rowIndex"
+                 [p-table-row-template-show]="isUndelivered"
+                 >
+                 <po-widget>
+                    <div class="po-row">
+                       <po-table
+                       [p-auto-collapse]="true"
+                       [p-columns]="columnsCVNDetail"
+                       [p-hide-columns-manager]="true"
+                       [p-items]="rowItem.subItm"
+                       [p-sort]="true"
+                       [p-striped]="true"
+                       [p-selectable]="true"
+                       [p-single-select]="true"
+                       (p-expanded)="showSecItem($event)"
+                       >
+                       <ng-template
+                          p-table-row-template
+                          let-rowItem
+                          let-i="rowIndex"
+                          >
+                          <po-table
+                          p-container="border"
+                          [p-columns]="columnCVD"
+                          [p-items]="rowItem.cvditem"
+                          [p-hide-columns-manager]="true"
+                          [p-sort]="true"
+                          >
+      
+                          </po-table>
+                          <po-button 
+                             class="confirmBtn" 
+                             p-label="Confirmar"
+                             [p-disabled]="rowItem.cvditem.length <= 0"
+                             (p-click)="saveForm()">
+                          </po-button>
+                       </ng-template>
+                       </po-table> 
+                    </div>
+                 </po-widget>
               </ng-template>
               </po-table>
            </div>
+           <po-loading-overlay [hidden]="hideLoadCVN" p-text="Carregando Plano de Contas Referencial"></po-loading-overlay>
+           <po-loading-overlay [hidden]="hideLoadCTT" p-text="Carregando Centro de Custos"></po-loading-overlay>
         </po-container>
-        
-        <div class="po-xl-4 po-lg-4 po-md-4 po-sm-4">
-          <po-container [p-height]="658">
-            <h2 class="mb-15">CT1 - Plano de Contas</h2>
-            
-            <div class="po-row">
-              <po-input class="po-md-6" name="searchct1" p-placeholder="Pesquisar..." p-clean > </po-input>
-              <po-button class="btnSearch" p-icon="po-icon po-icon-search po-field-icon" (p-click)="teste()"></po-button>
-            </div>
 
+        <po-modal p-click-out="true" p-size="sm">
+          <div class="po-row mt-15">
+            <po-input class="po-md-6" name="InputSearchCTT" p-placeholder="Pesquisar..." p-clean > </po-input>
+            <po-button class="btnSearch" p-icon="po-icon po-icon-search po-field-icon"></po-button>
+         </div>
+
+         <po-container [p-height]="350" [p-no-border]="true" [p-no-shadow]="true">
             <po-table
-              p-container="true"
+              [p-auto-collapse]="true"
+              [p-columns]="columnCTT"
+              [p-hide-columns-manager]="true"
+              [p-items]="itemCTT"
+              [p-sort]="true"
+              [p-striped]="true"
+              [p-selectable]="true"
+              [p-single-select]="true"
+              (p-selected)="selecCTT($event)"
+              (p-unselected)="unSelecCTT()"
+            ></po-table>
+          </po-container>
+
+          <po-modal-footer [p-disabled-align]="false">
+            <po-button [p-danger]="true" p-label="Cancelar" (p-click)="closeModal()"> </po-button>
+            <po-button p-kind="primary" p-label="Confirmar" (p-click)="confirmModal()" [p-disabled]="!CCusto"> </po-button>
+          </po-modal-footer>
+        </po-modal>
+
+        <div class="po-xl-4 po-lg-4 po-md-4 po-sm-4">
+           <po-container [p-height]="658">
+              <h2 class="mb-15">CT1 - Plano de Contas</h2>
+              <div class="po-row">
+                 <po-input class="po-md-6" (p-change-model)="changePesqCT1($event)" name="InputSearchCT1" p-placeholder="Pesquisar..." p-clean > </po-input>
+                 <po-button class="btnSearch" p-icon="po-icon po-icon-search po-field-icon" (p-click)="searchCT1()"> ></po-button>
+              </div>
+              <po-table
               [p-hide-text-overflow]="true"
               [p-selectable]="true"
               [p-sort]="true"
               [p-striped]="true"
-              [p-columns]="columns1"
-              [p-items]="items1"
+              [p-columns]="columnCT1"
+              [p-hide-columns-manager]="true"
+              [p-items]="itemCT1"
               [p-hide-select-all]="true"
-            >
-          </po-table>
-
-          <po-loading-overlay [hidden]="isHideLoading" p-text="Carregando Plano de Contas"></po-loading-overlay>
-          </po-container>
-          <po-button class="buttomExit" p-label="Atribuir" (p-click)="check()"> </po-button>
+              >
+              </po-table>
+              <po-loading-overlay [hidden]="hideLoadCT1" p-text="Carregando Plano de Contas"></po-loading-overlay>
+           </po-container>
+           <po-button class="buttomExit" p-label="Atribuir" (p-click)="check()"> </po-button>
         </div>
-
      </div>
   </po-page-default>
 </div>
