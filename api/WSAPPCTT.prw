@@ -101,7 +101,7 @@ Local aRet       := {}
     cQuery += " WHERE D_E_L_E_T_ = ' '  " 
     cQuery += " AND CTT_BLOQ != '1'  " 
     cQuery += " AND CTT_CLASSE = '2'  " 
-    cQuery += " AND CTT_FILIAL = '"+cFilAnt+"'  " 
+    cQuery += " AND CTT_FILIAL = '"+xFilial('CTT')+"'  " 
     cQuery += Iif(lSearch," AND CTT_CUSTO+UPPER(CTT_DESC01) like '%"+Upper(cSearch)+"%' ", " ")
     cQuery += " ORDER BY 3  " 
 
