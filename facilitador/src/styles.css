@@ -11,6 +11,7 @@
     --background-pressed: #C4ECF5;
     --color-table-box-shadow-header: #C4ECF5;
     --color-overlay-background-color-overlay: rgba(70, 162, 151, 0.2);
+    --color-modal-color-overlay: rgba(38, 45, 44, 0.26);
 }
 
 .po-menu, 
