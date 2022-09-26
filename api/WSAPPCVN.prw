@@ -49,8 +49,8 @@ Local aAux       := {}
                         cJson += '	"dtvigini":"'+aList[nList,4]+'",'
                         cJson += '	"dtvigfim":"'+aList[nList,5]+'",'
                         cJson += '	"entref":"'+aList[nList,6]+'",'
-                        cJson += '	"descricao":"'+aList[nList,7]+'",'
-                        cJson += '  "items": ['+ aList[nList,8]+']
+                        cJson += '	"descricao":"'+aList[nList,7]+'"'
+                        //cJson += '  "items": ['+ aList[nList,8]+']
                         cJson += '},'
                     Next nList
 
@@ -116,9 +116,10 @@ Local nX         := 1
     cQuery += " WHERE D_E_L_E_T_=''
     //cQuery += " AND CVN_DTVIGF >= '"+dtos(date())+"'
     cQuery += " AND CVN_FILIAL = '"+xFilial('CVN')+"'"
-    cQuery += " AND CVN_CODPLA+UPPER(CVN_DSCPLA) like '%"+Upper(cSearch)+"%'  "
+    If lSearch .And. !Empty(cSearch)
+        cQuery += " AND CVN_CODPLA+UPPER(CVN_DSCPLA) like '%"+Upper(cSearch)+"%'  "
+    endIf
     cQuery += " GROUP BY CVN_FILIAL,CVN_CODPLA,CVN_DSCPLA,CVN_DTVIGI,CVN_DTVIGF,CVN_ENTREF,CVN_VERSAO  
-    //filtrar somentes os corretos
     cQuery += " ORDER BY 1"
     
 
