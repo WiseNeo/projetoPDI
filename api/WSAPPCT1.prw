@@ -176,7 +176,7 @@ Return aRet
 
 
 Static Function RemoveEspec(cWord)
-    cWord := OemToAnsi(AllTrim(cWord))
+    cWord := OemToAnsi(cWord)
     cWord := FwNoAccent(cWord)
     cWord := FwCutOff(cWord)
     cWord := strtran(cWord,"ã","a")
@@ -219,5 +219,5 @@ Static Function RemoveEspec(cWord)
     cWord := StrTran(cWord, '°', '')
     cWord := StrTran(cWord, 'ª', '')
     cWord := strtran(cWord,""+'"'+"","")
-    cWord := AllTrim(cWord)
+    cWord := RTrim(cWord)
 Return cWord

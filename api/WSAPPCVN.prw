@@ -49,8 +49,8 @@ Local aAux       := {}
                         cJson += '	"dtvigini":"'+aList[nList,4]+'",'
                         cJson += '	"dtvigfim":"'+aList[nList,5]+'",'
                         cJson += '	"entref":"'+aList[nList,6]+'",'
-                        cJson += '	"descricao":"'+aList[nList,7]+'"'
-                        //cJson += '  "items": ['+ aList[nList,8]+']
+                        cJson += '	"descricao":"'+aList[nList,7]+'",'
+                        cJson += '  "items": ['+ aList[nList,8]+']
                         cJson += '},'
                     Next nList
 
@@ -135,7 +135,7 @@ Local nX         := 1
             RemoveEspec((cAliasSQL)->CVN_ENTREF),;
             RemoveEspec((cAliasSQL)->CVN_DSCPLA) })
 
-            If lSearch .And. !Empty(cSearch)
+            //If lSearch .And. !Empty(cSearch)
                 cAliasSQL2 := GetNextAlias()
 
                 cQuery := " SELECT CVN.* "
@@ -169,7 +169,7 @@ Local nX         := 1
                     (cAliasSQL2)->(DBSKIP())  
                     endDo
 
-                EndIf 
+                //EndIf 
                 (cAliasSQL2)->(DBCloseArea()) 
                 cJson := Left(cJson, RAT(",", cJson) - 1)
                 aadd(aRet[nX],cJson)    
