@@ -1,8 +1,15 @@
 import { Component, ViewChild, OnInit } from '@angular/core';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
-import { PoGridRowActions, PoMenuItem, PoModalAction, PoModalComponent, PoNotificationService, PoTableColumn, PoTableColumnLabel, PoTableComponent } from '@po-ui/ng-components';
 import { AppComponentService } from './app.component.service';
-import { HttpClient, HttpHeaders } from '@angular/common/http'
+import { HttpClient } from '@angular/common/http'
+
+import { 
+  PoMenuItem,
+  PoModalAction,
+  PoModalComponent,
+  PoNotificationService,
+  PoTableColumn,
+  PoTableComponent
+} from '@po-ui/ng-components';
 
 @Component({
   selector: 'app-root',
@@ -13,26 +20,17 @@ import { HttpClient, HttpHeaders } from '@angular/common/http'
 
 export class AppComponent implements OnInit {
 
+  inputSearchCT1: string = '';
+  CCusto: String = '';
   menuItemSelected: string | any;
-
-  idPrimSelec: number = 0
-  indexPrimSelec: number = 0
-
-  idSecSelec: number = 0
-  indexSecSelec: number = 0
-
-  idCvdSelect: number = 0
-
-
+  idPrimSelec: number = 0;
+  indexPrimSelec: number = 0;
+  idSecSelec: number = 0;
+  indexSecSelec: number = 0;
+  idCvdSelect: number = 0;
   hideLoadCT1 = false;
   hideLoadCTT = true;
   hideLoadCVN = false;
-
-  InputSearchCT1: string = ''
-  CCusto: String = ''
-
-  @ViewChild(PoModalComponent, { static: true }) poModal: PoModalComponent | any;
-  @ViewChild(PoTableComponent, { static: true }) poTable: PoTableComponent | any;
 
   columnCVN: Array<PoTableColumn> = this.servicemenu.getColumnCVN();
   columnCT1: Array<PoTableColumn> = this.servicemenu.gerColumnCT1();
@@ -41,6 +39,28 @@ export class AppComponent implements OnInit {
   items: Array<any> = []
   itemCT1: Array<any> = []
   itemCTT: Array<any> = []
+
+  @ViewChild(PoModalComponent, { static: true }) poModal: PoModalComponent | any;
+  @ViewChild(PoTableComponent, { static: true }) poTable: PoTableComponent | any;
+
+  public readonly columnCVD: Array<PoTableColumn> = [
+    { property: 'conta', label: 'Conta', width: '10%' },
+    { property: 'desccta', label: 'Descrição Conta', width: '30%' },
+    {
+      property: 'ccusto',
+      label: 'Centro de Custo',
+      type: 'link',
+      action: (value: any, row: any) => {
+        this.hideLoadCTT = false
+        this.loadCTT(row)
+      },
+    }
+  ];
+
+  public readonly columnCTT: Array<PoTableColumn> = [
+    { property: 'ccusto', label: 'Centro de Custo', width: '40%' },
+    { property: 'descri', label: 'Descrição', width: '60%' }
+  ];
 
   constructor(
     public http: HttpClient,
@@ -96,7 +116,6 @@ export class AppComponent implements OnInit {
   }
 
   confirmModal(){
-
     const auxCvd = this.items[this.indexPrimSelec]
       .subItm[this.indexSecSelec]
       .cvditem
@@ -113,7 +132,6 @@ export class AppComponent implements OnInit {
   }
 
   check() {
-
     if(this.idPrimSelec > 0){
       let itemAux: any = []
 
@@ -158,7 +176,6 @@ export class AppComponent implements OnInit {
     this.idPrimSelec = 0
   }
 
-
   selecCTT(row: any){
     this.CCusto = row.ccusto
   }
@@ -171,7 +188,6 @@ export class AppComponent implements OnInit {
     this.menuItemSelected = menu.label;
     alert(this.menuItemSelected)
   }
-
 
   saveForm() {
     this.collapseAll();
@@ -196,9 +212,7 @@ export class AppComponent implements OnInit {
     })
   }
 
-
   showSecItem(row:any){
-
     this.items[this.indexPrimSelec].subItm.map((item: any,index: number) =>{
 
       if(row.id === item.id){
@@ -209,8 +223,6 @@ export class AppComponent implements OnInit {
     })
   }
 
-
-
   collapseAll() {
     this.items.forEach((item, index) => {
       item.subItm.forEach((subItem: any) => {
@@ -220,8 +232,6 @@ export class AppComponent implements OnInit {
       this.poTable.collapse(index);
     });
   }
-
-
 
   loadCT1(){
     const url = 'http://localhost:8400/rest/apict1/planodecontas/1'
@@ -236,17 +246,16 @@ export class AppComponent implements OnInit {
           }
         )
       });
-
+      
       this.hideLoadCT1 = true
     })
   }
 
   searchCT1(){
-
     this.itemCT1 = []
 
-    if(!!this.InputSearchCT1){
-      const url = `http://localhost:8400/rest/apict1/searchplanodecontas/${this.InputSearchCT1}`
+    if(!!this.inputSearchCT1){
+      const url = `http://localhost:8400/rest/apict1/searchplanodecontas/${this.inputSearchCT1}`
       this.http.get(url).subscribe((response:any) =>{
         response.forEach((element: any) => {
           this.itemCT1.push(
@@ -266,13 +275,13 @@ export class AppComponent implements OnInit {
     }
   }
 
-
   loadCVN(){
     const url = 'http://localhost:8400/rest/apicvn/cabcvn/1'
     let idAux = 0
 
     this.http.get(url).subscribe((response:any) =>{
       response.forEach((element: any, index: number) => {
+
         this.items.push(
           {
             id: idAux = idAux + 1,
@@ -284,9 +293,13 @@ export class AppComponent implements OnInit {
             versao: element.versao,
           }
         )
+
+        this.items[index].subItm = []
+
         if(element.items.length > 0){
           element.items.map((item : any) =>{
-            this.items[index].subItm = [{
+
+            this.items[index].subItm.push({
               id: parseInt(item.id),
               linha: item.linha,
               contaRef: item.contaRef,
@@ -295,10 +308,9 @@ export class AppComponent implements OnInit {
               classe: item.classe,
               natcta: item.natcta,
               cvditem: []
-            }]
+            })
+
           })
-        }else{
-          this.items[index].subItm = []
         }
 
       });
@@ -306,7 +318,6 @@ export class AppComponent implements OnInit {
       this.hideLoadCVN = true
     })
   }
-
 
   loadCTT(row: any){
     const url = 'http://localhost:8400/rest/apictt/centrodecustos/1'
@@ -330,36 +341,11 @@ export class AppComponent implements OnInit {
 
 
   restore() {
-    this.InputSearchCT1 = '';
+    this.inputSearchCT1 = '';
   }
 
   changePesqCT1(pesq : string){
-    this.InputSearchCT1 = pesq
+    this.inputSearchCT1 = pesq
   }
-
-
-
-  public readonly columnCVD: Array<PoTableColumn> = [
-    { property: 'conta', label: 'Conta', width: '10%' },
-    { property: 'desccta', label: 'Descrição Conta', width: '30%' },
-    {
-      property: 'ccusto',
-      label: 'Centro de Custo',
-      type: 'link',
-      action: (value: any, row: any) => {
-        this.hideLoadCTT = false
-        this.loadCTT(row)
-      },
-    }
-  ];
-
-
-  public readonly columnCTT: Array<PoTableColumn> = [
-    { property: 'ccusto', label: 'Centro de Custo', width: '40%' },
-    { property: 'descri', label: 'Descrição', width: '60%' }
-  ];
-
-
-
 
 }
