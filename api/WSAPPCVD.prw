@@ -1,296 +1,109 @@
-#Include "PROTHEUS.ch"
-#Include "RESTFUL.ch"
+#include "protheus.ch"
+#include "fwmvcdef.ch"
+#include "restful.ch"
 
-#xtranslate @{Header <(cName)>} => ::GetHeader( <(cName)> )
-#xtranslate @{Param <n>} => ::aURLParms\[ <n> \]
-#xtranslate @{EndRoute} => EndCase
-#xtranslate @{Route} => Do Case
-#xtranslate @{When <path>} => Case NGIsRoute( ::aURLParms, <path> )
-#xtranslate @{Default} => Otherwise
+//-------------------------------------------------------------------
+/*{Protheus.doc} apicvd
+API para inserção e consulta de produtos (SB1)
 
+@author Daniel Mendes
+@since 06/07/2020
+@version 1.0
+*/
+//-------------------------------------------------------------------
+WSRESTFUL apicvd DESCRIPTION "Serviço REST para manipulação da CVD"
 
-WsRestful apiteste Description "WebService REST para testes"
+   // WSDATA CodProduto As String
 
-    WsMethod GET Description "Sincronização de dados via GET" WsSyntax "/GET/{method}"
+    WSMETHOD POST DESCRIPTION "Retorna o produto informado na URL" WSSYNTAX "/apicvd" PATH "/apicvd" PRODUCES APPLICATION_JSON
 
-End WsRestful
+END WSRESTFUL
 
-WsMethod GET WsService apiteste
+WSMETHOD POST WSSERVICE apicvd
+local jCvd
+local cError as char
+local cJson as char
+local cAlias as char
+local lOk as logical
+local aAreaCVD as array
 
-Local cJson      := ''
-Local nList      := 0
-Local nX         := 0
-Local cCorte     := 10
-Local nInit      := 1
-Local nTerm      := cCorte
-Local aList      := {}
-Local aAux       := {}
-Local aUsrPass   := {}
-Local aUser      := {}
+Self:SetContentType("application/json")
 
-    ::SetContentType('application/json')
+jCvd := JsonObject():New()
+cError := jCvd:fromJson( self:getContent() )
+lOk := .F.
 
-        @{Route}
-            @{When '/produtos/{id}'}
-                
-                aList  := fQryProd(.F.,'')
-                nDivid := Ceiling(Len(aList)/cCorte)
+if Empty(cError)
+    aAreaCVD := CVD->( GetArea() )
+    //cAlias := Alias()
+    CVD->(DbSetOrder(1))//CVD_FILIAL+CVD_CONTA+CVD_ENTREF+CVD_CTAREF+CVD_CUSTO+CVD_VERSAO
+    if !CVD->( DbSeek( xFilial("CVD") + jCvd["conta"] + jCvd["entref"] + jCvd["ctaref"] + jCvd["ccusto"] + jCvd["versao"]) )
+        
+        /* modelo MVC
+        * oModel := FwLoadModel("CTBA020")
+        * oModel:setOperation(MODEL_OPERATION_INSERT)
+        * oModel:Activate()
+        * oModel:setValue("CT1MASTER", "B1_COD", jCvd["conta"])
+        */
+        /* JSON MODELO
+        "conta":  "101010101           ",
+        "entref": "10",
+        "codpla": "000010",
+        "ctaref": "1.01.01.01.01                 ",
+        "classe": "2",
+        "ccusto": "",
+        "tputil": "A",
+        "versao": "0001",
+        "natcta": "01",
+        "ctasup": "1.01.01.01                    "
+        */
 
-                For nX := 1 To nDivid
-                    cJson := '['
+        RecLock('CVD',.T.)
+        CVD->CVD_FILIAL := xFilial("CVD")
+		CVD->CVD_CONTA  := jCvd["conta"]
+		CVD->CVD_ENTREF := jCvd["entref"]
+		CVD->CVD_CODPLA := jCvd["codpla"]
+		CVD->CVD_CTAREF := jCvd["ctaref"]
+		CVD->CVD_CLASSE := jCvd["classe"] 
+		CVD->CVD_CUSTO  := jCvd["ccusto"]
+		CVD->CVD_TPUTIL := jCvd["tputil"]
+		CVD->CVD_VERSAO := jCvd["versao"]
+		CVD->CVD_NATCTA := jCvd["natcta"]
+		CVD->CVD_CTASUP := jCvd["ctasup"]    
+        CVD->(MSunlock())
 
-                    For nList := nInit to Iif(nX=nDivid,Len(aList),nTerm)
-                        cJson += '{'
-                        cJson += '	"codigo":"'+aList[nList,1]+'",'
-                        cJson += '	"descricao":"'+aList[nList,2]+'",'
-                        cJson += '	"tipo":"'+aList[nList,3]+'",'
-                        cJson += '	"unidmed":"'+aList[nList,4]+'",'
-                        cJson += '	"armazem":"'+aList[nList,5]+'",'
-                        cJson += '	"grupo":"'+aList[nList,6]+'"'
-                        cJson += '},'
-                    Next nList
+        cJson := "{'conta':' " + CVD->CVD_CONTA + "',"
+        cJson += "'msg':'Sucesso'"
+        cJson += "}"    
+        ::SetResponse(cJson)
+        
+        /* modelo MVC
+        *if oModel:VldData()
+        *    lOk := oModel:CommitData()
+        *    //cJson := '{"CONTA":"' + CVD->CVD_CONTA + '"';
+        *    //        + ',"msg":"'  + "Sucesso"          + '"';
+        *    //        +'}'
+        *    ::SetResponse(cJson)
+        *else
+        *    ConErr(oModel:GetErrorMessage()[MODEL_MSGERR_MESSAGE])
+        *    SetRestFault(400)
+        *endif
+        *oModel:Destroy()
+        *FreeObj(oModel)
+        */
+        
+    else
+        SetRestFault(400, "Vinculo já existente! " )
+    endif
 
-                    nInit := nInit+cCorte
-                    nTerm := nTerm+cCorte
-                    cJson := Left(cJson, RAT(",", cJson) - 1)
-                    cJson += ']'
+    RestArea(aAreaCVD)
 
-                    Aadd(aAux,cJson)
-                Next nX
+    //if !Empty(cAlias)
+    //    DBSelectArea(cAlias)
+    //endif
+else
+    ConErr(cError)
+    setRestFault(400)
+endif
 
-                If Val(@{Param 2}) <= Len(aAux)
-                    ::SetResponse(aAux[Val(@{Param 2})])
-                Else
-                    SetRestFault(400,'Ops')
-                EndIf
-
-            @{When '/searchprod/{id}'}
-                aList := fQryProd(.T.,Alltrim(Upper(@{Param 2})))
-                cJson := '['
-                
-                For nList := 1 to Len(aList)
-                    cJson += '{'
-                    cJson += '	"codigo":"'+aList[nList,1]+'",'
-                    cJson += '	"descricao":"'+aList[nList,2]+'",'
-                    cJson += '	"tipo":"'+aList[nList,3]+'",'
-                    cJson += '	"unidmed":"'+aList[nList,4]+'",'
-                    cJson += '	"armazem":"'+aList[nList,5]+'",'
-                    cJson += '	"grupo":"'+aList[nList,6]+'"'
-                    cJson += '},'
-                Next nList
-
-                cJson := Left(cJson, RAT(",", cJson) - 1)
-                cJson += ']'
-                
-                If Len(aList)>0
-                    ::SetResponse(cJson)
-                Else
-                    ::SetResponse('[]')
-                EndIf
-
-            @{When '/users/{id}'}
-                aUsrPass := StrTokArr(Lower(cValToChar(@{Param 2})),"|&|")
-
-                If Len(aUsrPass) > 0
-                    PswOrder(2)
-                    If PswSeek(aUsrPass[1],.T.)
-                        aUser := PswRet()[1]
-
-                        If PswName(aUsrPass[2])
-                            cJson := '['
-                            cJson += '{'
-                            cJson += '"user": '+'"'+aUsrPass[1]+'",'
-                            cJson += '"pass": '+'"'+aUsrPass[2]+'",'
-                            cJson += '"name": '+'"'+Capital(aUser[4])+'",'
-                            cJson += '"mail": '+'"'+aUser[14]+'" '
-                            cJson += '}'
-                            cJson += ']'
-
-                            ::SetResponse(cJson)
-                        Else
-                            SetRestFault(400,'Senha Invalida')
-                            Return .F.
-                        EndIf
-                    Else
-                        SetRestFault(400,'Usuario Invalido')
-                        Return .F.
-                    EndIf
-                Else
-                    SetRestFault(400,'Usuario Invalido')
-                    Return .F.
-                EndIf
-                
-            @{When '/lojas/{id}'}
-                
-                aList  := fQryloja(.F.,'')
-                nDivid := Ceiling(Len(aList)/cCorte)
-
-                For nX := 1 To nDivid
-                    cJson := '['
-
-                    For nList := nInit to Iif(nX=nDivid,Len(aList),nTerm)
-                        cJson += '{'
-                        cJson += '	"id":"'+aList[nList,1]+'",'
-                        cJson += '	"filial":"'+aList[nList,2]+'",'
-                        cJson += '	"armazem":"'+aList[nList,3]+'",'
-                        cJson += '	"descricao":"'+aList[nList,4]+'",'
-                        cJson += '	"tipolj":"'+aList[nList,5]+'",'
-                        cJson += '	"invent":"'+aList[nList,6]+'",'
-                        cJson += '	"bloqueado":"'+aList[nList,7]+'"'
-                        cJson += '},'
-                    Next nList            
-
-                    nInit := nInit+cCorte
-                    nTerm := nTerm+cCorte
-                    cJson := Left(cJson, RAT(",", cJson) - 1)
-                    cJson += ']'
-
-                    Aadd(aAux,cJson)
-                Next nX
-
-                If Val(@{Param 2}) <= Len(aAux)
-                    ::SetResponse(aAux[Val(@{Param 2})])
-                Else
-                    SetRestFault(400,'Ops')
-                EndIf
-                
-
-            @{When '/searchloja/{id}'}
-
-                aList := fQryloja(.T.,Alltrim(Upper(@{Param 2})))
-                cJson := '['
-                
-                For nList := 1 to Len(aList)
-                    cJson += '{'
-                    cJson += '	"id":"'+aList[nList,1]+'",'
-                    cJson += '	"filial":"'+aList[nList,2]+'",'
-                    cJson += '	"armazem":"'+aList[nList,3]+'",'
-                    cJson += '	"descricao":"'+aList[nList,4]+'",'
-                    cJson += '	"tipolj":"'+aList[nList,5]+'",'
-                    cJson += '	"invent":"'+aList[nList,6]+'",'
-                    cJson += '	"bloqueado":"'+aList[nList,7]+'"'
-                    cJson += '},'
-                Next nList
-
-                cJson := Left(cJson, RAT(",", cJson) - 1)
-                cJson += ']'
-                
-                If Len(aList)>0
-                    ::SetResponse(cJson)
-                Else
-                    ::SetResponse('[]')
-                EndIf
-
-            @{Default}
-                SetRestFault(400,"Ops")
-                Return .F.    
-        @{EndRoute}
-
-Return .T.
-
-
-Static Function fQryProd(lSearch,cSearch)
-
-Local cAliasSQL  := GetNextAlias()
-Local cQuery     := ''
-Local aRet       := {}
-
-    cQuery := " SELECT * FROM "+RetSqlName('SB1')+" "
-	cQuery += " WHERE D_E_L_E_T_!='*' AND B1_MSBLQL!='1' "
-    cQuery += Iif(lSearch," AND B1_DESC LIKE '%"+cSearch+"%' ", " ")
-
-    MPSysOpenQuery(cQuery,cAliasSQL)
-
-    While (cAliasSQL)->(!EoF())
-        Aadd(aRet,{;
-            RemoveEspec((cAliasSQL)->B1_COD)   ,;
-            RemoveEspec((cAliasSQL)->B1_DESC)  ,;
-            RemoveEspec((cAliasSQL)->B1_TIPO)  ,;
-            RemoveEspec((cAliasSQL)->B1_UM)    ,;
-            RemoveEspec((cAliasSQL)->B1_LOCPAD),;
-            RemoveEspec((cAliasSQL)->B1_GRUPO) })
-
-        (cAliasSQL)->(DbSkip())
-    EndDo
-
-Return aRet
-
-
-Static Function fQryloja(lSearch,cSearch)
-
-Local cAliasSQL  := GetNextAlias()
-Local cQuery     := ''
-Local aRet       := {}
-Local nId        := 0
-
-    cQuery := " SELECT * FROM "+RetSqlName('NNR')+" "
-	cQuery += " WHERE D_E_L_E_T_!='*' "
-    cQuery += "     AND RTRIM(LTRIM(SUBSTRING(NNR_DESCRI,1,2))) = 'LJ' "
-    cQuery += Iif(lSearch," AND NNR_DESCRI LIKE '%"+cSearch+"%' ", " ")
-    cQuery += " ORDER BY NNR_FILIAL,NNR_CODIGO "
-
-    MPSysOpenQuery(cQuery,cAliasSQL)
-
-    While (cAliasSQL)->(!EoF())
-        nId++
-        Aadd(aRet,{;
-            cValToChar(nId) ,;
-            RemoveEspec((cAliasSQL)->NNR_FILIAL) ,;
-            RemoveEspec((cAliasSQL)->NNR_CODIGO) ,;
-            RemoveEspec((cAliasSQL)->NNR_DESCRI) ,;
-            Iif(Empty((cAliasSQL)->NNR_XTPLJ),'S',(cAliasSQL)->NNR_XTPLJ),;
-            Iif(Empty((cAliasSQL)->NNR_XINV),'N',(cAliasSQL)->NNR_XINV),;
-            Iif(Empty((cAliasSQL)->NNR_MSBLQL),'2',(cAliasSQL)->NNR_MSBLQL)})
-
-        (cAliasSQL)->(DbSkip())
-    EndDo
-
-Return aRet
-
-
-Static Function RemoveEspec(cWord)
-    cWord := OemToAnsi(AllTrim(cWord))
-    cWord := FwNoAccent(cWord)
-    cWord := FwCutOff(cWord)
-    cWord := strtran(cWord,"ã","a")
-    cWord := strtran(cWord,"º","")
-    cWord := strtran(cWord,"%","")
-    cWord := strtran(cWord,"*","")     
-    cWord := strtran(cWord,"&","")
-    cWord := strtran(cWord,"$","")
-    cWord := strtran(cWord,"#","")
-    cWord := strtran(cWord,"§","") 
-    cWord := strtran(cWord,"ä","a")
-    cWord := strtran(cWord,",","")
-    cWord := strtran(cWord,".","")
-    cWord := StrTran(cWord, "'", "")
-    cWord := StrTran(cWord, "#", "")
-    cWord := StrTran(cWord, "%", "")
-    cWord := StrTran(cWord, "*", "")
-    cWord := StrTran(cWord, "&", "E")
-    cWord := StrTran(cWord, ">", "")
-    cWord := StrTran(cWord, "<", "")
-    cWord := StrTran(cWord, "!", "")
-    cWord := StrTran(cWord, "@", "")
-    cWord := StrTran(cWord, "$", "")
-    cWord := StrTran(cWord, "(", "")
-    cWord := StrTran(cWord, ")", "")
-    cWord := StrTran(cWord, "_", "")
-    cWord := StrTran(cWord, "=", "")
-    cWord := StrTran(cWord, "+", "")
-    cWord := StrTran(cWord, "{", "")
-    cWord := StrTran(cWord, "}", "")
-    cWord := StrTran(cWord, "[", "")
-    cWord := StrTran(cWord, "]", "")
-    cWord := StrTran(cWord, "?", "")
-    cWord := StrTran(cWord, ".", "")
-    cWord := StrTran(cWord, "\", "")
-    cWord := StrTran(cWord, "|", "")
-    cWord := StrTran(cWord, ":", "")
-    cWord := StrTran(cWord, ";", "")
-    cWord := StrTran(cWord, '"', '')
-    cWord := StrTran(cWord, '°', '')
-    cWord := StrTran(cWord, 'ª', '')
-    cWord := strtran(cWord,""+'"'+"","")
-    cWord := AllTrim(cWord)
-Return cWord
+return lOk
