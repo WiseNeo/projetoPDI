@@ -1,13 +1,17 @@
 <div class="po-wrapper">
-  <po-menu 
+<!--  <po-menu 
   p-logo="../assets/logo.png" 
   p-short-logo="../assets/shortlogo.png" 
+  [p-collapsed]="true" 
+  [p-menus]="menus" 
+  ></po-menu> -->
+  <po-menu 
   [p-collapsed]="true" 
   [p-menus]="menus" 
   ></po-menu>
   <po-page-default>
      <div class="po-row mt-15">
-        <po-container class="po-xl-8 po-lg-8 po-md-8 po-sm-8" [p-height]="710">
+        <po-container class="po-xl-8 po-lg-8 po-md-8 po-sm-8">
            <h2 class="mb-15">CVN - Plano de Contas Referencial</h2>
            <div class="po-row">
               <po-input class="po-md-3" (p-change-model)="changePesqCT1($event)" name="inputSearchCT1" p-placeholder="Pesquisar..." p-clean > </po-input>
@@ -22,6 +26,7 @@
               [p-sort]="true"
               [p-striped]="true"
               (p-expanded)="showItem($event)"
+              [p-height]="updateHeight(innerWidth)"
               >
               <ng-template
                  p-table-row-template
@@ -101,7 +106,7 @@
         </po-modal>
 
         <div class="po-xl-4 po-lg-4 po-md-4 po-sm-4">
-           <po-container [p-height]="658">
+           <po-container>
               <h2 class="mb-15">CT1 - Plano de Contas</h2>
               <div class="po-row">
                  <po-input class="po-md-6" (p-change-model)="changePesqCT1($event)" name="inputSearchCT1" p-placeholder="Pesquisar..." p-clean > </po-input>
@@ -116,6 +121,7 @@
               [p-hide-columns-manager]="true"
               [p-items]="itemCT1"
               [p-hide-select-all]="true"
+              [p-height]="updateHeight(innerWidth)-55"
               >
               </po-table>
               <po-loading-overlay [hidden]="hideLoadCT1" p-text="Carregando Plano de Contas"></po-loading-overlay>

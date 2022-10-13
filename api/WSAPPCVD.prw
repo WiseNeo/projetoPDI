@@ -1,16 +1,67 @@
-#include "protheus.ch"
-#include "fwmvcdef.ch"
-#include "restful.ch"
+#include "PROTHEUS.ch"
+#include "RESTFUL.ch"
 
-//-------------------------------------------------------------------
-/*{Protheus.doc} apicvd
-API para inserção e consulta de produtos (SB1)
+#xtranslate @{Header <(cName)>} => ::GetHeader( <(cName)> )
+#xtranslate @{Param <n>} => ::aURLParms\[ <n> \]
+#xtranslate @{EndRoute} => EndCase
+#xtranslate @{Route} => Do Case
+#xtranslate @{When <path>} => Case NGIsRoute( ::aURLParms, <path> )
+#xtranslate @{Default} => Otherwise
 
-@author Daniel Mendes
-@since 06/07/2020
-@version 1.0
-*/
-//-------------------------------------------------------------------
+WsRestful apicvd Description "WebService REST para testes"
+
+    WsMethod POST Description "Sincronização de dados via POST"  WsSyntax "/POST/{method}"
+
+End WsRestful
+
+WsMethod POST WsService apicvd
+    Local cJson := ::GetContent()
+    Local oParser
+
+    ::SetContentType( 'application/json' )
+
+    @{Route}
+        @{When '/'}
+            If FwJsonDeserialize(cJson,@oParser)
+                aAreaCVD := CVD->( GetArea() )
+                CVD->(DbSetOrder(1))//CVD_FILIAL+CVD_CONTA+CVD_ENTREF+CVD_CTAREF+CVD_CUSTO+CVD_VERSAO
+                If !CVD->( DbSeek( xFilial("CVD") + AvKey(oParser:conta,"CVD_CONTA") + AvKey(oParser:entref,"CVD_ENTREF") + AvKey(oParser:ctaref,"CVD_CTAREF") + AvKey(oParser:ccusto,"CVD_CUSTO") + AvKey(oParser:versao,"CVD_VERSAO")) )
+                    RecLock('CVD',.T.)
+                        CVD->CVD_FILIAL := xFilial("CVD")
+                        CVD->CVD_CONTA  := oParser:conta
+                        CVD->CVD_ENTREF := oParser:entref 
+                        CVD->CVD_CODPLA := oParser:codpla 
+                        CVD->CVD_CTAREF := oParser:ctaref
+                        CVD->CVD_CLASSE := oParser:classe
+                        CVD->CVD_CUSTO  := oParser:ccusto
+                        CVD->CVD_TPUTIL := oParser:tputil
+                        CVD->CVD_VERSAO := oParser:versao
+                        CVD->CVD_NATCTA := oParser:natcta
+                        CVD->CVD_CTASUP := oParser:ctasup  
+                    CVD->(MSunlock())
+
+                    cJson := "{'conta':' " + CVD->CVD_CONTA + "',"
+                    cJson += "'msg':'Sucesso'"
+                    cJson += "}"
+
+                    ::SetResponse(cJson)
+                Else
+                    SetRestFault(400, "Vinculo já existente! " )
+                EndIf
+
+            Else
+                SetRestFault(400,'Ops')
+                Return .F.
+            EndIf
+        @{Default}
+            SetRestFault(400,"Ops")
+            Return .F.
+    @{EndRoute}
+Return .T.
+
+
+
+/*
 WSRESTFUL apicvd DESCRIPTION "Serviço REST para manipulação da CVD"
 
    // WSDATA CodProduto As String
@@ -56,7 +107,7 @@ if Empty(cError)
         "versao": "0001",
         "natcta": "01",
         "ctasup": "1.01.01.01                    "
-        */
+        *//*
 
         RecLock('CVD',.T.)
         CVD->CVD_FILIAL := xFilial("CVD")
@@ -77,33 +128,17 @@ if Empty(cError)
         cJson += "}"    
         ::SetResponse(cJson)
         
-        /* modelo MVC
-        *if oModel:VldData()
-        *    lOk := oModel:CommitData()
-        *    //cJson := '{"CONTA":"' + CVD->CVD_CONTA + '"';
-        *    //        + ',"msg":"'  + "Sucesso"          + '"';
-        *    //        +'}'
-        *    ::SetResponse(cJson)
-        *else
-        *    ConErr(oModel:GetErrorMessage()[MODEL_MSGERR_MESSAGE])
-        *    SetRestFault(400)
-        *endif
-        *oModel:Destroy()
-        *FreeObj(oModel)
-        */
-        
+      
     else
         SetRestFault(400, "Vinculo já existente! " )
     endif
 
     RestArea(aAreaCVD)
 
-    //if !Empty(cAlias)
-    //    DBSelectArea(cAlias)
-    //endif
 else
     ConErr(cError)
     setRestFault(400)
 endif
 
 return lOk
+*/

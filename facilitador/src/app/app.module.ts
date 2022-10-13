@@ -1,6 +1,8 @@
 import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
+import { ProtheusLibCoreModule } from '@totvs/protheus-lib-core';
+
 
 import { AppComponent } from './app.component';
 import { PoModule } from '@po-ui/ng-components';

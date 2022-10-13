@@ -27,7 +27,7 @@ Local aList      := {}
 Local aAux       := {}
 
     RpcSetType(3)
-    RpcSetEnv('T1', 'D MG 01 ',,,'CTB')
+    RpcSetEnv('T1', 'X CT5 ',,,'CTB')
 
     ::SetContentType('application/json')
 
@@ -112,7 +112,7 @@ Local aRet       := {}
 Local nX         := 1
 
     cQuery := " SELECT CT1_FILIAL,CT1_CONTA,CT1_DESC01,CT1_CLASSE,CT1_NORMAL,CT1_NTSPED,CT1_DTEXIS,R_E_C_N_O_ FROM "+RetSqlName('CT1')+" CT1 "
-	cQuery += " WHERE CT1.D_E_L_E_T_ = ' ' "
+	cQuery += " WHERE CT1.D_E_L_E_T_ = ' ' AND CT1_FILIAL='X CT5 ' AND CT1_CLASSE ='2' "
     cQuery += Iif(lSearch," AND CT1_CONTA+UPPER(CT1_DESC01) like '%"+Upper(cSearch)+"%'  ", " ")
 
     MPSysOpenQuery(cQuery,cAliasSQL)

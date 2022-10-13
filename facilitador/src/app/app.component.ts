@@ -1,6 +1,9 @@
 import { Component, ViewChild, OnInit } from '@angular/core';
 import { AppComponentService } from './app.component.service';
 import { HttpClient } from '@angular/common/http'
+import { ProAppConfigService } from '@totvs/protheus-lib-core';
+import { BehaviorSubject, debounceTime, distinctUntilChanged, first, map as mapObservable, Observable, Subject, takeUntil, takeWhile, throttleTime } from 'rxjs';
+
 
 import { 
   PoMenuItem,
@@ -10,6 +13,7 @@ import {
   PoTableColumn,
   PoTableComponent
 } from '@po-ui/ng-components';
+import { NumberValueAccessor } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
@@ -65,8 +69,18 @@ export class AppComponent implements OnInit {
   constructor(
     public http: HttpClient,
     public poNotification: PoNotificationService,
-    public servicemenu: AppComponentService, 
+    public servicemenu: AppComponentService,
+    private proAppConfigService: ProAppConfigService
     ) {}
+
+    private closeApp() {
+      if (this.proAppConfigService.insideProtheus()) {
+          this.proAppConfigService.callAppClose();
+      } else {
+          alert('O App não está sendo executado dentro do Protheus.');
+      }
+  }
+
 
   close: PoModalAction = {
     action: () => {
@@ -99,11 +113,33 @@ export class AppComponent implements OnInit {
     },
   ];
 
-  ngOnInit() {    
+  innerWidth: any;
+
+  ngOnInit() {
+    this.innerWidth = window.innerWidth;
+    this.updateHeight(this.innerWidth);
+
     this.restore()
     this.loadCT1()
     this.loadCVN()
-    
+  }
+
+
+    // Ajusta a altura da tabela de acordo com a resolução
+  /* istanbul ignore next */
+  updateHeight(height: number) {
+
+    let adjustheight: number = 0
+    if (height <= 1200) {
+      adjustheight = 300;
+    } else if (height >= 1201 && height <= 1899) {
+      adjustheight = 400;
+    } else if (height >= 1900 && height <= 2190) {
+      adjustheight = 700;
+    } else if (height >= 2191) {
+      adjustheight = 800;
+    }
+    return adjustheight
   }
 
   isUndelivered(row: any, index: number) {
@@ -190,7 +226,7 @@ export class AppComponent implements OnInit {
   }
 
   saveForm() {
-    this.collapseAll();
+    //this.collapseAll();
     this.idPrimSelec = 0
     this.indexPrimSelec = 0
     this.idSecSelec = 0

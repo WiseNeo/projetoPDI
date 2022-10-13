@@ -27,8 +27,7 @@ Local aList      := {}
 Local aAux       := {}
 
     RpcSetType(3)
-    RpcSetEnv('T1', 'D MG 01 ',,,'CTB')
-
+    RpcSetEnv('T1', 'X CT5 ',,,'CTB')
 
     ::SetContentType('application/json')
 
@@ -115,7 +114,8 @@ Local nX         := 1
     cQuery += " FROM "+RetSqlName('CVN')+" "
     cQuery += " WHERE D_E_L_E_T_=''
     //cQuery += " AND CVN_DTVIGF >= '"+dtos(date())+"'
-    cQuery += " AND CVN_FILIAL = '"+xFilial('CVN')+"'"
+    //cQuery += " AND CVN_FILIAL = '"+FWxFilial('CVN')+"'"
+    cQuery += " AND CVN_FILIAL = 'X CT5 ' AND CVN_CLASSE = '2' "
     If lSearch .And. !Empty(cSearch)
         cQuery += " AND CVN_CODPLA+UPPER(CVN_DSCPLA) like '%"+Upper(cSearch)+"%'  "
     endIf
@@ -145,6 +145,7 @@ Local nX         := 1
                 cQuery += " AND CVN_CODPLA = '"+(cAliasSQL)->CVN_CODPLA+"'"
                 cQuery += " AND CVN_VERSAO = '"+(cAliasSQL)->CVN_VERSAO+"'"
                 cQuery += " AND CVN_ENTREF = '"+(cAliasSQL)->CVN_ENTREF+"'"
+                cQuery += " AND CVN_CLASSE = '2' "
 
                 MPSysOpenQuery(cQuery,cAliasSQL2)
 
